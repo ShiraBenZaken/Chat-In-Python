@@ -10,16 +10,22 @@ BUFSIZ = 512
 ADDR = (HOST, PORT)
 MAX_CONECTION = 5
 SERVER = socket(AF_INET, SOCK_STREAM)
-SERVER.bind(ADDR)
+SERVER.bind(ADDR) #set up the server
 
 #Global VARIABLE
 persons=[]
 
 
 def broudcast(msg,name):
+    """
+    send new messages to all clients
+    :param msg: bytes["utf8"]
+    :param name: str
+    :return:
+    """
     for person in persons:
         client=person.client
-        client.send(bytes(name+": "+msg))
+        client.send(bytes(name+": ", "utf8")+ msg)
 
 
 def client_communicate(person):
@@ -64,6 +70,7 @@ def wait_for_connect():
             print("[FAILED]",e)
             run = False
     print("SERVER CRASHED")
+
 
 if __name__ == '__main__':
     SERVER.listen(MAX_CONECTION) #listen for max conections
