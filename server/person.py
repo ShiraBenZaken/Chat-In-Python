@@ -5,3 +5,4 @@ class Person:
         self.client = client
 
     def __repr__(self):
+        return f"Person({self.addr}, {self.name})"

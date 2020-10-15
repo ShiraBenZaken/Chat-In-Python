@@ -1,6 +1,7 @@
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import time
+from person import Person
 
 #Global variable
 HOST = 'localhost'
@@ -13,14 +14,16 @@ SERVER.bind(ADDR)
 
 def broudcast()
 
-def client_communicate(client):
+def client_communicate(person):
     """
     Tread to handle all masages from client
-    :param client: socket
+    :param client: Person
     :return: None
     """
-    run = True
-    while run:
+    client=person.client
+    name=person.name
+    addr=person.addr
+    while True:
         msg = client.recv(BUFSIZ)
         if msg == bytes("{quit}", "utf8"):
             client.close()
@@ -39,8 +42,9 @@ def wait_for_connect():
     while run:
         try:
             client, addr =SERVER.accept()
+            person= Person()
             print(f"[CONNECTION] {addr} connected to the server at {time.time()}")
-            Thread(target=client_communicate, args=(client,)).start()
+            Thread(target=client_communicate, args=(person,)).start()
         except Exception as e:
             print("[FAILED]",e)
             run = False
