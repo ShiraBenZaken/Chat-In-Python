@@ -3,20 +3,20 @@ from threading import Thread
 import time
 from person import Person
 
-#Global constants
+# Global constants
 HOST = 'localhost'
-PORT =  55000
+PORT = 55000
 BUFSIZ = 512
 ADDR = (HOST, PORT)
 MAX_CONECTION = 5
 SERVER = socket(AF_INET, SOCK_STREAM)
-SERVER.bind(ADDR) #set up the server
+SERVER.bind(ADDR)  # set up the server
 
-#Global VARIABLE
-persons=[]
+# Global VARIABLE
+persons = []
 
 
-def broudcast(msg,name):
+def broadcast(msg , name):
     """
     send new messages to all clients
     :param msg: bytes["utf8"]
@@ -24,32 +24,39 @@ def broudcast(msg,name):
     :return:
     """
     for person in persons:
-        client=person.client
-        client.send(bytes(name+": ", "utf8")+ msg)
+        client = person.client
+        client.send(bytes(name+": ", "utf8") + msg)
 
 
 def client_communicate(person):
     """
     Tread to handle all masages from client
-    :param client: Person
+    :param person: Person
     :return: None
     """
-    client=person.client
-    addr=person.addr
+    client = person.client
 
     #get persons name
-    name=client.recv(BUFSIZ).decode("utf8")
-    msg= f"{name} has joined the chat"
-    broudcast(msg)
+    name = client.recv(BUFSIZ).decode("utf8")
+    msg = f"{name} has joined the chat"
+    broadcast(msg)  # broadcast welcome msg
 
     while True:
-        msg = client.recv(BUFSIZ)
-        if msg == bytes("{quit}", "utf8"):
-            client.send(bytes("{quit}", "utf8"))
-            client.close()
-            persons.remove(person)
-        else:
-            client.send(msg, name)
+        try:
+            msg = client.recv(BUFSIZ)
+            print(f"{name}: ", msg.decode("utf8"))
+            if msg == bytes("{quit}", "utf8"):
+                broadcast(f"{name} has left the chat...", "")
+                client.send(bytes("{quit}", "utf8"))
+                client.close()
+                persons.remove(person)
+                break
+            else:
+                broadcast(msg, name)
+        except Exception as e:
+            print("[EXCEPTION]", e)
+            break
+
 
 
 def wait_for_connect():
@@ -61,21 +68,21 @@ def wait_for_connect():
     run = True
     while run:
         try:
-            client, addr =SERVER.accept()
-            person= Person(addr, client)
+            client, addr = SERVER.accept()
+            person = Person(addr, client)
             persons.append(person)
             print(f"[CONNECTION] {addr} connected to the server at {time.time()}")
             Thread(target=client_communicate, args=(person,)).start()
         except Exception as e:
-            print("[FAILED]",e)
+            print("[FAILED]", e)
             run = False
     print("SERVER CRASHED")
 
 
 if __name__ == '__main__':
-    SERVER.listen(MAX_CONECTION) #listen for max conections
+    SERVER.listen(MAX_CONECTION)  # listen for max conections
     print("[STARTED] Waiting for conection...")
-    ACCEPT_THEARD =Thread(target=wait_for_connect)
+    ACCEPT_THEARD = Thread(target=wait_for_connect)
     ACCEPT_THEARD.start()
     ACCEPT_THEARD.join()
     SERVER.close()
