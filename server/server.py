@@ -3,7 +3,7 @@ from threading import Thread
 import time
 from person import Person
 
-#Global variable
+#Global constants
 HOST = 'localhost'
 PORT =  55000
 BUFSIZ = 512
@@ -12,7 +12,15 @@ MAX_CONECTION = 5
 SERVER = socket(AF_INET, SOCK_STREAM)
 SERVER.bind(ADDR)
 
-def broudcast()
+#Global VARIABLE
+persons=[]
+
+
+def broudcast(msg,name):
+    for person in persons:
+        client=person.client
+        client.send(bytes(name+": "+msg))
+
 
 def client_communicate(person):
     """
@@ -21,15 +29,21 @@ def client_communicate(person):
     :return: None
     """
     client=person.client
-    name=person.name
     addr=person.addr
+
+    #get persons name
+    name=client.recv(BUFSIZ).decode("utf8")
+    msg= f"{name} has joined the chat"
+    broudcast(msg)
+
     while True:
         msg = client.recv(BUFSIZ)
         if msg == bytes("{quit}", "utf8"):
+            client.send(bytes("{quit}", "utf8"))
             client.close()
+            persons.remove(person)
         else:
-
-
+            client.send(msg, name)
 
 
 def wait_for_connect():
@@ -42,7 +56,8 @@ def wait_for_connect():
     while run:
         try:
             client, addr =SERVER.accept()
-            person= Person()
+            person= Person(addr, client)
+            persons.append(person)
             print(f"[CONNECTION] {addr} connected to the server at {time.time()}")
             Thread(target=client_communicate, args=(person,)).start()
         except Exception as e:
